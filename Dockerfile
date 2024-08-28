@@ -1,34 +1,34 @@
 # Use an official Ubuntu image as the base
 FROM ubuntu:20.04
 
-# Install required dependencies for C++ and build tools
+# Set environment variables to configure tzdata non-interactively
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/New_York
+
+# Install necessary dependencies for C++ and build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
     g++ \
     cmake \
     libopencv-dev \
     curl \
+    sudo \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - \
     && apt-get install -y nodejs
 
-# Set up the working directory for C++ and Node.js
+# Set up the working directory
 WORKDIR /app
 
-# Copy the C++ source code and Node.js application files
+# Copy all files from the current directory into the /app directory in the container
 COPY . .
 
-# Compile the C++ application
-RUN g++ -o seam_carving seam_carving.cpp `pkg-config --cflags --libs opencv4`
+# Make sure the build script is executable
+RUN chmod +x /app/build.sh
 
-# Install Node.js dependencies
-RUN npm install
-
-# Expose the port your Node.js app runs on
-EXPOSE 8080
-
-# Start the Node.js application
-CMD ["npm", "start"]
+# Run the build script
+CMD ["/app/build.sh"]
 
